@@ -1,0 +1,328 @@
+================================================================================
+MARK-BASED TASK GENERATION - INTEGRATION QUICK START
+================================================================================
+
+WHAT IS THIS?
+-------------
+A system that generates educational tasks based on student marks WITHOUT 
+accessing any database. The LLM receives marks directly from the user.
+
+KEY BENEFIT: No database setup required!
+
+
+FILES TO SHARE FOR INTEGRATION
+===============================
+
+CORE FILES (Must Include):
+--------------------------
+1. services/mark_based_service.py  - Main service (self-contained)
+2. services/llm_service.py         - LLM wrapper (Gemini API)
+3. config.py                       - Configuration
+
+OPTIONAL FILES:
+--------------
+4. example_mark_based.py           - Usage examples
+5. demo_mark_based.py              - Standalone demo
+
+
+API ENDPOINT
+============
+
+POST /api/tasks/generate-from-marks
+
+REQUEST FORMAT:
+{
+  "marks": {
+    "student_name": "Alice Johnson",
+    "subject": "Algebra",
+    "recent_marks": [75, 82, 78, 85],
+    "total_marks": 100,
+    "teacher_notes": "Shows improvement"
+  },
+  "difficulty_preference": null,
+  "task_length_preference": null
+}
+
+RESPONSE FORMAT:
+{
+  "student_name": "Alice Johnson",
+  "subject": "Algebra",
+  "calculated_difficulty": 8.0,
+  "title": "Advanced Quadratic Equations",
+  "instructions": "...",
+  "expected_input": "...",
+  "reasoning": "Strong performance (80%) with improving trend..."
+}
+
+
+HOW IT WORKS
+============
+
+1. User provides marks → 2. System calculates difficulty → 3. LLM generates task
+                         (No database access!)
+
+
+DIFFICULTY CALCULATION
+======================
+
+Average Mark    Difficulty    Description
+-----------     ----------    -----------
+90%+            9.0           Expert level
+80-89%          7.5           Advanced
+70-79%          6.0           Intermediate
+60-69%          5.0           Medium
+50-59%          4.0           Below average
+40-49%          3.0           Basic
+<40%            2.0           Supportive
+
+TREND ADJUSTMENTS:
+- Improving marks: +0.5 difficulty
+- Declining marks: -0.5 difficulty
+
+
+QUICK SETUP
+===========
+
+1. Install dependencies:
+   pip install google-generativeai pydantic pydantic-settings
+
+2. Set environment variables:
+   GEMINI_API_KEY=your_key_here
+   GEMINI_MODEL=gemini-2.0-flash-exp
+
+3. Copy files:
+   - services/mark_based_service.py
+   - services/llm_service.py
+   - config.py
+
+4. Use in code:
+   from services.mark_based_service import get_mark_based_service
+   service = get_mark_based_service()
+
+
+PYTHON USAGE EXAMPLE
+====================
+
+from services.mark_based_service import (
+    get_mark_based_service,
+    StudentMarks,
+    MarkBasedTaskRequest
+)
+
+# Create marks
+marks = StudentMarks(
+    student_name="Emma Wilson",
+    subject="Algebra",
+    recent_marks=[65, 70, 68, 72],
+    total_marks=100
+)
+
+# Generate task
+service = get_mark_based_service()
+request = MarkBasedTaskRequest(marks=marks)
+task = await service.generate_task_from_marks(request)
+
+print(f"Title: {task.title}")
+print(f"Difficulty: {task.calculated_difficulty}/10")
+
+
+API USAGE EXAMPLE (Any Language)
+=================================
+
+# cURL
+curl -X POST http://localhost:8000/api/tasks/generate-from-marks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "marks": {
+      "student_name": "Alice",
+      "subject": "Math",
+      "recent_marks": [75, 82, 78],
+      "total_marks": 100
+    }
+  }'
+
+# JavaScript
+fetch('http://localhost:8000/api/tasks/generate-from-marks', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    marks: {
+      student_name: "Alice",
+      subject: "Math",
+      recent_marks: [75, 82, 78],
+      total_marks: 100
+    }
+  })
+}).then(res => res.json())
+
+
+WHAT RECIPIENTS NEED
+====================
+
+REQUIRED:
+- Python 3.10+ (for Python integration)
+- Gemini API key
+- Dependencies: google-generativeai, pydantic
+
+NOT REQUIRED:
+- ✗ Database setup
+- ✗ Database credentials
+- ✗ Student data storage
+- ✗ ORM configuration
+
+
+INTEGRATION OPTIONS
+===================
+
+Option 1: Python Package
+-------------------------
+Copy the 3 core files to their project and import directly.
+
+Option 2: REST API
+------------------
+Deploy as a service, they make HTTP requests.
+
+Option 3: Standalone
+--------------------
+Share as a ZIP with all files and examples.
+
+
+FILE DEPENDENCIES
+=================
+
+mark_based_service.py
+    └── llm_service.py
+            └── config.py
+                    └── pydantic-settings
+
+NO DATABASE DEPENDENCIES!
+
+
+TESTING THE INTEGRATION
+========================
+
+1. Run demo:
+   python demo_mark_based.py
+
+2. Start server:
+   python main.py
+
+3. Test endpoint:
+   python example_mark_based.py
+
+
+KEY DIFFERENCES FROM DATABASE APPROACH
+=======================================
+
+Database Approach:
+- Requires database setup
+- LLM queries database
+- Data persistence needed
+- Complex infrastructure
+
+Mark-Based Approach:
+- No database needed
+- LLM receives marks in prompt
+- Stateless operation
+- Simple deployment
+
+
+CUSTOMIZATION POINTS
+====================
+
+Recipients can customize:
+1. LLM Provider: Replace llm_service.py with OpenAI, Claude, etc.
+2. Difficulty Logic: Modify _calculate_difficulty_from_marks()
+3. Task Length: Adjust _determine_task_length()
+4. Prompts: Edit _build_task_generation_prompt()
+
+
+SUPPORT & TROUBLESHOOTING
+==========================
+
+Common Issues:
+
+1. "Module not found"
+   → Install dependencies: pip install -r requirements.txt
+
+2. "API key error"
+   → Set GEMINI_API_KEY environment variable
+
+3. "Connection refused"
+   → Start the server: python main.py
+
+4. "Timeout"
+   → Increase timeout in client request
+
+
+PACKAGE CONTENTS TO SHARE
+==========================
+
+Create this structure for recipients:
+
+mark_based_integration/
+├── mark_based_service.py       # Core service
+├── llm_service.py              # LLM wrapper
+├── config.py                   # Configuration
+├── example_mark_based.py       # Examples
+├── demo_mark_based.py          # Demo
+├── requirements.txt            # Dependencies
+└── THIS_FILE.txt               # This guide
+
+
+REQUIREMENTS.TXT
+================
+
+google-generativeai>=0.3.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+fastapi>=0.104.0
+uvicorn>=0.24.0
+
+
+.ENV.EXAMPLE
+============
+
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-2.0-flash-exp
+
+
+COMPLETE EXAMPLE SCENARIOS
+===========================
+
+Scenario 1: High Performer
+---------------------------
+Marks: [92, 95, 88, 94]
+→ Difficulty: 9.0/10
+→ Task Length: Long
+→ Repetition: Low
+
+Scenario 2: Improving Student
+------------------------------
+Marks: [60, 65, 70, 75]
+→ Difficulty: 6.0/10 (base) + 0.5 (improving) = 6.5/10
+→ Task Length: Medium
+→ Repetition: Medium
+
+Scenario 3: Struggling Student
+-------------------------------
+Marks: [45, 38, 42, 40]
+→ Difficulty: 2.0/10
+→ Task Length: Short
+→ Repetition: High
+
+
+SUMMARY
+=======
+
+✅ Send 3 core files: mark_based_service.py, llm_service.py, config.py
+✅ Recipient needs: API key, Python 3.10+, dependencies
+✅ No database setup required
+✅ Works via Python import OR REST API
+✅ Stateless, privacy-focused, simple integration
+
+For questions, refer to the code comments in mark_based_service.py
+
+
+END OF GUIDE
+================================================================================
